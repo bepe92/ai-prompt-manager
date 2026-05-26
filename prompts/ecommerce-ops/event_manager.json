@@ -6,7 +6,7 @@
   "validation_schema": {
     "required_fields": ["recommendations"],
     "optional_fields": [],
-    "field_types": {"recommendations": "str"},
+    "field_types": {"recommendations": "list_nonempty"},
     "extra_forbidden": true
   },
   "versions": [

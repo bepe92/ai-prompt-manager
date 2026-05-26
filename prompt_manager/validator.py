@@ -41,6 +41,10 @@ _TYPE_MAP_REQUIRED: dict[str, tuple[type, Any]] = {
     "iso_date":      (str,   Field(...)),     # post-check after model validation
     "iso_datetime":  (str,   Field(...)),
     "bool":          (bool,  Field(...)),
+    "list":          (list,  Field(...)),
+    "list_nonempty": (list,  Field(..., min_length=1)),
+    "dict":          (dict,  Field(...)),
+    "any":           (Any,   Field(...)),
 }
 
 _TYPE_MAP_OPTIONAL: dict[str, tuple[type, Any]] = {
@@ -53,6 +57,10 @@ _TYPE_MAP_OPTIONAL: dict[str, tuple[type, Any]] = {
     "iso_date":      (str | None,   None),
     "iso_datetime":  (str | None,   None),
     "bool":          (bool | None,  None),
+    "list":          (list | None,  None),
+    "list_nonempty": (list | None,  None),
+    "dict":          (dict | None,  None),
+    "any":           (Any,          None),
 }
 
 

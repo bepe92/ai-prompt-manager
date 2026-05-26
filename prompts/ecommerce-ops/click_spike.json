@@ -6,7 +6,7 @@
   "validation_schema": {
     "required_fields": ["interpretations"],
     "optional_fields": [],
-    "field_types": {"interpretations": "str"},
+    "field_types": {"interpretations": "list_nonempty"},
     "extra_forbidden": true
   },
   "versions": [

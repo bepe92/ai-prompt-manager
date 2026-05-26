@@ -55,20 +55,44 @@
       "expected_notes": "All 7 fields extracted, broker='Vitol Trading S.A.', volume=45000, price=82.45"
     },
     {
-      "id": "mercuria-tbd-price",
-      "label": "Mercuria — price TBD (should auto-reject)",
-      "description": "Tests null-over-guessing rule. Price marked TBD; LLM must return null; validator must reject.",
-      "input": "From: deals-desk@mercuria-energy.com\nSubject: POTWIERDZENIE TRANSAKCJI ME/2026/00725\n\nConfirmation - PRICE TBD:\n\nME/2026/00725 | 28-05-2026 | Naphtha | 22,000 MT | TBD - awaiting benchmark | CIF Rotterdam | September 2026\n\nMercuria Energy Trading",
-      "expected_outcome": "fail_validation",
-      "expected_notes": "price_usd is None → validator complaints 'price_usd nie jest liczbą'"
-    },
-    {
       "id": "trafigura-table-format",
-      "label": "Trafigura — HTML table style, DD/MM/YYYY date",
+      "label": "Trafigura — table layout, DD/MM/YYYY date",
       "description": "Different broker layout (table) and European date format. LLM must convert DD/MM/YYYY → YYYY-MM-DD.",
       "input": "TRAFIGURA MARKETS LTD - DEAL CONFIRMATION\n\nConfirmation ID | TFG-29384\nTrade Date      | 25/05/2026\nCommodity       | Natural Gas (Henry Hub)\nQuantity        | 120,000 MT\nUnit Price      | USD 3.85 / MMBtu\nDelivery Window | July 2026",
       "expected_outcome": "pass",
       "expected_notes": "trade_date should be '2026-05-25' (converted from '25/05/2026')"
+    },
+    {
+      "id": "mercuria-tbd-price",
+      "label": "Mercuria — price TBD (correctly rejected)",
+      "description": "Tests null-over-guessing rule. Price marked TBD; LLM must return null; validator must reject.",
+      "input": "From: deals-desk@mercuria-energy.com\nSubject: POTWIERDZENIE TRANSAKCJI ME/2026/00725\n\nConfirmation - PRICE TBD:\n\nME/2026/00725 | 28-05-2026 | Naphtha | 22,000 MT | TBD - awaiting benchmark | CIF Rotterdam | September 2026\n\nMercuria Energy Trading",
+      "expected_outcome": "fail_validation",
+      "expected_notes": "price_usd is None → walidator: 'price_usd nie jest liczbą'. To DOBRE failure — pipeline świadomie odrzucił niepełne dane."
+    },
+    {
+      "id": "negative-volume-data-error",
+      "label": "Negative volume — data corruption (rejected)",
+      "description": "Broker mail zawiera ujemny wolumen (błąd po stronie brokera). Walidator wymaga >0.",
+      "input": "From: deals@vitol-trading.com\nSubject: POTWIERDZENIE TRANSAKCJI - VT-2026-CORRUPT\n\nReference:    VT-2026-CORRUPT\nTrade Date:   28-May-2026\nProduct:      Brent Crude Oil\nVolume:       -45,000 MT\nPrice:        82.45 USD per barrel\n\nVitol Trading S.A.",
+      "expected_outcome": "fail_validation",
+      "expected_notes": "volume_mt < 0 → 'pole volume_mt musi być dodatnie'. Validator chroni przed corrupted data."
+    },
+    {
+      "id": "garbage-input",
+      "label": "Garbage input — random text (parse fail)",
+      "description": "Wejście to przypadkowy tekst, nie mail. LLM może zwrócić cokolwiek lub nic.",
+      "input": "aaaaaa to nie jest żaden mail tylko losowy tekst napisany przez kota chodzącego po klawiaturze. nic z tego nie da się wyciągnąć bo nie ma żadnych danych transakcji.",
+      "expected_outcome": "fail_parse",
+      "expected_notes": "Albo LLM zwróci null-y dla wszystkich pól (fail_validation) albo niesensowny tekst (fail_parse). Pokazuje że pipeline nie crashuje na śmieciach."
+    },
+    {
+      "id": "false-positive-confirm-old-deal",
+      "label": "⚠️ False positive — forwarded old confirmation",
+      "description": "Trader wysłał DALEJ stare potwierdzenie. Walidacja przechodzi (wszystkie pola są), ale semantycznie to NIE jest nowa transakcja.",
+      "input": "From: trader@shell.com\nSubject: FWD: POTWIERDZENIE TRANSAKCJI - VT-2025-01234\nDate: 27-May-2026\n\n---------- Forwarded message ----------\nFrom: deals@vitol-trading.com\nSubject: POTWIERDZENIE TRANSAKCJI - VT-2025-01234\nDate: 14-Mar-2025\n\nReference:    VT-2025-01234\nTrade Date:   14-Mar-2025\nProduct:      Brent Crude Oil\nVolume:       50,000 MT\nPrice:        78.20 USD per barrel\nDelivery:     FOB Rotterdam, April 2025\n\nVitol Trading S.A.",
+      "expected_outcome": "false_positive",
+      "expected_notes": "KRYTYCZNE: To pasuje do schematu Pydantic — broker, produkt, cena, data, wszystko jest. ALE data transakcji jest sprzed roku! Strukturalna walidacja tego NIE złapie. Trader patrząc na side-by-side widzi 'Forwarded message' w nagłówku i odrzuca ręcznie. To dokładnie powód dla którego human-in-the-loop nie jest opcjonalny."
     }
   ]
 }

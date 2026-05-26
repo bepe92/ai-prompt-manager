@@ -14,7 +14,11 @@
           <option value="">— wybierz przypadek testowy —</option>
           {% for f in record.test_fixtures %}
             <option value="{{ f.id }}" {% if selected_fixture and selected_fixture.id == f.id %}selected{% endif %}>
-              {{ f.label }} {% if f.expected_outcome == 'pass' %}✅{% else %}❌{% endif %}
+              {{ f.label }}
+              {%- if f.expected_outcome == 'pass' %} ✅
+              {%- elif f.expected_outcome == 'false_positive' %} ⚠️
+              {%- else %} ❌
+              {%- endif %}
             </option>
           {% endfor %}
         </select>
@@ -23,8 +27,12 @@
           <span class="fixture-meta">
             <strong>{{ selected_fixture.label }}</strong> —
             <span class="muted small">{{ selected_fixture.description }}</span>
-            <span class="pill {% if selected_fixture.expected_outcome == 'pass' %}pill--ok{% else %}pill--fail{% endif %}">
-              expected: {{ selected_fixture.expected_outcome }}
+            {% set outcome = selected_fixture.expected_outcome %}
+            <span class="pill
+              {%- if outcome == 'pass' %} pill--ok
+              {%- elif outcome == 'false_positive' %} pill--warn
+              {%- else %} pill--fail{% endif %}">
+              expected: {{ outcome }}
             </span>
           </span>
         {% endif %}
@@ -84,6 +92,16 @@
               <ul>
                 {% for err in result.errors %}<li>{{ err }}</li>{% endfor %}
               </ul>
+            </div>
+          {% endif %}
+
+          {% if result.failure_analysis %}
+            <div class="ai-analysis">
+              <div class="ai-analysis-head">
+                <span class="badge-ai">CLAUDE ANALYSIS</span>
+                <span class="muted small">drugi LLM call wyjaśnia dlaczego test się wywalił</span>
+              </div>
+              <p>{{ result.failure_analysis }}</p>
             </div>
           {% endif %}
 

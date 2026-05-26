@@ -64,6 +64,15 @@ Prompt engineering is a real discipline. It deserves real tooling.
 
 Each prompt JSON ships with a `test_fixtures` array — predefined `(input, expected_outcome)` pairs that the Tester loads via a dropdown. No copy-pasting examples from chat logs or scratchpads.
 
+Four outcome categories shipped:
+
+| Outcome | What it means | Why a good prompt should have these |
+|---|---|---|
+| `pass` ✅ | Happy path; LLM extracts correctly and Pydantic accepts. | Baseline — prove the prompt works at all. |
+| `fail_validation` ❌ | LLM behaves correctly (e.g. returns `null` for missing data) but Pydantic rejects because required fields are empty. | The GOOD failure — pipeline deliberately blocks incomplete data instead of fabricating it. |
+| `fail_parse` ❌ | LLM returned malformed/non-JSON output. Pipeline must not crash. | Tests defensive parsing for garbage inputs, adversarial inputs, model regressions. |
+| `false_positive` ⚠️ | Pydantic accepts but the data is semantically wrong. | **The most important category** — proves the limit of structural validation and why human-in-the-loop is non-optional. |
+
 ```json
 "test_fixtures": [
   {
@@ -83,6 +92,27 @@ This solves three real problems:
 - **Self-documenting failure modes.** Browsing the dropdown is a guided tour of every weird case the prompt was designed to handle.
 
 In production this is where you'd plug in a golden dataset of real anonymised inputs, run them all on every prompt activation, and refuse to promote a prompt to prod if any regression fixture flips from `pass` to `fail_validation`.
+
+### Failure analysis — second LLM explains what broke
+
+When a test fails validation, the Tester fires a second cheap Claude call asking the model to write a one-paragraph explanation in plain Polish:
+- **WHAT** went wrong (which field, which rule)
+- **WHY** it happened — bad prompt, bad input, or model regression?
+- **WHAT** the trader/dev should do — fix the prompt, ignore the input, escalate?
+
+This turns a red `FAILED` pill from "your test broke" into "your test correctly caught X because Y — here's what to do next". Costs ~$0.001 per failed test on Haiku 4.5.
+
+### The `false_positive` category — limit of structural validation
+
+A `false_positive` fixture is one where **Pydantic accepts the output** but the data is semantically wrong. Examples shipped in the repo:
+
+- **email-tracker**: a trader forwarded a year-old confirmation. All fields present, schema valid, but the trade date is from 2025 — not a new deal. A human sees "FWD: …" in the subject and rejects; the validator never had a chance.
+- **deals_anomaly**: a deal references `product_id: "FAKE-PROD-999"` which doesn't exist in the catalog. Structurally fine, semantically broken — needs cross-check against the product DB.
+- **click_spike**: a 900% click spike that's actually bot scraping, not viral traffic. Numbers look organic to the LLM; only an anti-bot signal would reveal the truth.
+
+These fixtures exist to demonstrate a fundamental point: **structural validation (Pydantic) catches FORM errors. Semantic validation requires either domain knowledge, cross-references to other systems, or a human review step.** That's why every project in this portfolio routes valid extractions to a *pending* queue for trader sign-off — the validator is necessary but not sufficient. The trader's eye comparing extracted data against the original source is the only defense against this category of failure.
+
+In an interview this is the strongest signal of architectural maturity you can give: *"I know what my validator catches AND what it doesn't, and I designed the workflow accordingly."*
 
 ### Honest answer to "but your prompts are tuned to demo data"
 

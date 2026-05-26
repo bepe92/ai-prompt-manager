@@ -28,26 +28,34 @@
     {
       "id": "sales-surge-pre-launch",
       "label": "Sales surge — pre-launch tailwind",
-      "description": "Phone sales +92% with X13 launch in 10 days. Should be attributed to upcoming event.",
+      "description": "Sprzedaż phone +92% z X13 launch za 10 dni. Hipoteza: nadchodzący event.",
       "input": "{\"flagged_products\": [{\"product_id\": \"NPX12P\", \"product_name\": \"Nordic Phone X12 Pro\", \"category\": \"Electronics\", \"sold_today\": 48, \"sold_yesterday\": 22, \"avg_7day\": 25.0, \"pct_vs_avg\": 92.0}], \"upcoming_events\": [{\"name\": \"Nordic Phone X13 Launch\", \"event_date\": \"2026-06-05\", \"affected_categories\": [\"Electronics\"]}]}",
       "expected_outcome": "pass",
-      "expected_notes": "likely_cause should reference the Nordic Phone X13 Launch event"
+      "expected_notes": "likely_cause powinno odnosić się do Nordic Phone X13 Launch"
     },
     {
       "id": "sales-collapse-no-event",
       "label": "Sales collapse — no event explanation",
-      "description": "-81% drop with no relevant event. Likely supply/data issue.",
+      "description": "-81% spadek bez relewantnego eventu. Prawdopodobnie problem dostaw/danych.",
       "input": "{\"flagged_products\": [{\"product_id\": \"ICEPOT\", \"product_name\": \"IcePot Espresso Maker\", \"category\": \"Home\", \"sold_today\": 4, \"sold_yesterday\": 22, \"avg_7day\": 21.0, \"pct_vs_avg\": -81.0}], \"upcoming_events\": []}",
       "expected_outcome": "pass",
-      "expected_notes": "likely_cause should suggest data error, stock-out, or indexing issue"
+      "expected_notes": "likely_cause powinno zasugerować błąd danych, stock-out, lub problem z indeksowaniem"
     },
     {
       "id": "sales-mixed-with-midsommar",
       "label": "Mixed surge/drop ahead of Midsommar",
-      "description": "SaunaTowel surge (Midsommar tailwind), LapBike drop (suspect). Two different hypotheses needed.",
+      "description": "SaunaTowel surge (Midsommar), LapBike drop (podejrzane). Dwie różne hipotezy.",
       "input": "{\"flagged_products\": [{\"product_id\": \"SAUNATWL\", \"product_name\": \"SaunaTowel Bamboo XL\", \"category\": \"Home\", \"sold_today\": 65, \"sold_yesterday\": 30, \"avg_7day\": 28.0, \"pct_vs_avg\": 132.0}, {\"product_id\": \"LAPBIKE\", \"product_name\": \"LapBike Carbon Road\", \"category\": \"Sport\", \"sold_today\": 2, \"sold_yesterday\": 12, \"avg_7day\": 14.0, \"pct_vs_avg\": -85.7}], \"upcoming_events\": [{\"name\": \"Midsommar\", \"event_date\": \"2026-06-21\", \"affected_categories\": [\"Home\", \"Sport\"]}]}",
       "expected_outcome": "pass",
-      "expected_notes": "Two causes: SaunaTowel = seasonal/event, LapBike = anomaly to investigate"
+      "expected_notes": "Dwie przyczyny: SaunaTowel = sezonowy/event, LapBike = anomalia do zbadania"
+    },
+    {
+      "id": "empty-flagged",
+      "label": "Empty flagged list (rejected)",
+      "description": "Python nie sflagował nic — żadna sprzedaż nie odbiega. Agent dostaje pustkę.",
+      "input": "{\"flagged_products\": [], \"upcoming_events\": []}",
+      "expected_outcome": "fail_validation",
+      "expected_notes": "Walidator list_nonempty odrzuca pustą listę causes. Kontrakt: jeśli odpalasz agenta = musi być co analizować."
     }
   ]
 }

@@ -19,35 +19,59 @@
       "prompt": "Jesteś agentem analizy ruchu (kliknięć) na platformie e-commerce Bazarek.\n\nZADANIE:\nOtrzymasz listę produktów z anomaliami w kliknięciach — Python już je wykrył:\n  (a) klikalność dziś jest 2x lub więcej wyższa niż #2 w kategorii, LUB\n  (b) wzrost o >150% względem dnia poprzedniego.\n\nDla każdego produktu napisz jednozdaniową INTERPRETACJĘ po polsku:\n  - \"organic\": realny ruch — viral, news media, premiera, event sezonowy\n  - \"data_anomaly\": coś jest nie tak — błąd indeksowania, bot scraping, błąd cenowy który przyciąga kliki\n\nOtrzymasz też kalendarz nadchodzących eventów — wykorzystaj go.\n\nKLASYFIKUJ severity:\n- \"HIGH\": wzrost >300% bez wytłumaczenia eventem\n- \"MEDIUM\": wzrost 150-300% lub dominacja kategorii bez eventu\n- \"LOW\": wzrost znaczący ale wyjaśnialny eventem\n\nZwróć WYŁĄCZNIE czysty JSON: {\"interpretations\": [{\"product_id\": \"...\", \"severity\": \"...\", \"interpretation\": \"...\"}]}",
       "saved_at": "2026-05-26T08:00:00",
       "note": "Initial prompt — ported from ai-ecommerce-ops-assistant/src/agent_click_spike.py",
-      "test_passed": null,
-      "test_input": null,
-      "test_output": null
+      "test_passed": true,
+      "test_input": "{\"flagged_products\": [{\"product_id\": \"NPX12P\", \"product_name\": \"Nordic Phone X12 Pro\", \"category\": \"Electronics\", \"clicks_today\": 3833, \"clicks_yesterday\": 1198, \"pct_change\": 219.9, \"dominance_in_category\": 1.85}], \"upcoming_events\": [{\"name\": \"Nordic Phone X13 Launch\", \"event_date\": \"2026-06-05\", \"affected_categories\": [\"Electronics\"]}]}",
+      "test_output": {
+        "interpretations": [
+          {
+            "product_id": "NPX12P",
+            "severity": "MEDIUM",
+            "interpretation": "Wzrost 220% kliknięć jest wyjaśniany spekulacją rynkową i medialnym szumem związanym z zbliżającym się wydaniem konkurencyjnego modelu X13, który generuje zainteresowanie starszą generacją jako alternatywa cenowa."
+          }
+        ]
+      }
     }
   ],
   "test_fixtures": [
     {
       "id": "phone-spike-explained-by-launch",
       "label": "Phone click spike — explained by launch event",
-      "description": "220% spike with X13 launch in 10 days. Should be classified as ORGANIC, severity LOW.",
+      "description": "220% spike z X13 launch za 10 dni. Powinien być ORGANIC, severity LOW.",
       "input": "{\"flagged_products\": [{\"product_id\": \"NPX12P\", \"product_name\": \"Nordic Phone X12 Pro\", \"category\": \"Electronics\", \"clicks_today\": 3833, \"clicks_yesterday\": 1198, \"pct_change\": 219.9, \"dominance_in_category\": 1.85}], \"upcoming_events\": [{\"name\": \"Nordic Phone X13 Launch\", \"event_date\": \"2026-06-05\", \"affected_categories\": [\"Electronics\"]}]}",
       "expected_outcome": "pass",
-      "expected_notes": "severity=LOW, interpretation references organic pre-launch interest"
+      "expected_notes": "severity=LOW, interpretacja odnosi się do organic pre-launch interest"
     },
     {
       "id": "sauna-heater-unexplained-spike",
       "label": "Sauna heater spike — no event (HIGH anomaly)",
-      "description": "336% spike + 4.4x category dominance, no relevant event. Likely data anomaly.",
+      "description": "336% spike + 4.4x dominacja kategorii, bez relewantnego eventu. Prawdopodobnie data anomaly.",
       "input": "{\"flagged_products\": [{\"product_id\": \"SAUNAFX\", \"product_name\": \"SaunaFlex Smart Heater\", \"category\": \"Home\", \"clicks_today\": 4800, \"clicks_yesterday\": 1100, \"pct_change\": 336.4, \"dominance_in_category\": 4.38}], \"upcoming_events\": []}",
       "expected_outcome": "pass",
-      "expected_notes": "severity=HIGH, interpretation='data_anomaly' — should suggest verification"
+      "expected_notes": "severity=HIGH, interpretacja='data_anomaly' — powinno sugerować weryfikację"
     },
     {
       "id": "mixed-organic-and-anomaly",
       "label": "Mixed: SkiBoot suspicious, AuroraBuds organic",
-      "description": "SkiBoot 328% off-season → anomaly. AuroraBuds 165% with phone launch nearby → organic halo.",
+      "description": "SkiBoot 328% off-season → anomaly. AuroraBuds 165% z phone launch w pobliżu → organic halo.",
       "input": "{\"flagged_products\": [{\"product_id\": \"SKIBOOT\", \"product_name\": \"SkiBoot Elite 2026\", \"category\": \"Sport\", \"clicks_today\": 1200, \"clicks_yesterday\": 280, \"pct_change\": 328.6, \"dominance_in_category\": 2.1}, {\"product_id\": \"AURBUDS\", \"product_name\": \"AuroraBuds Wireless Pro\", \"category\": \"Electronics\", \"clicks_today\": 4500, \"clicks_yesterday\": 1700, \"pct_change\": 164.7, \"dominance_in_category\": 1.2}], \"upcoming_events\": [{\"name\": \"Nordic Phone X13 Launch\", \"event_date\": \"2026-06-05\", \"affected_categories\": [\"Electronics\"]}]}",
       "expected_outcome": "pass",
-      "expected_notes": "Two interpretations: SkiBoot HIGH/data_anomaly, AuroraBuds LOW/organic"
+      "expected_notes": "Dwie interpretacje: SkiBoot HIGH/data_anomaly, AuroraBuds LOW/organic"
+    },
+    {
+      "id": "empty-flagged",
+      "label": "No clicks to analyze (rejected)",
+      "description": "Python nie wykrył żadnych spików. Agent nie ma czego interpretować.",
+      "input": "{\"flagged_products\": [], \"upcoming_events\": []}",
+      "expected_outcome": "fail_validation",
+      "expected_notes": "Walidator list_nonempty odrzuca. Defensive: jeśli wywołujesz agenta = musi być flagged input."
+    },
+    {
+      "id": "false-positive-bot-traffic",
+      "label": "⚠️ False positive — bot traffic looks like viral",
+      "description": "Spike może być z bot-scraping, nie z prawdziwych userów. LLM nie ma jak tego odróżnić.",
+      "input": "{\"flagged_products\": [{\"product_id\": \"AURBUDS\", \"product_name\": \"AuroraBuds Wireless Pro\", \"category\": \"Electronics\", \"clicks_today\": 9999, \"clicks_yesterday\": 1000, \"pct_change\": 899.9, \"dominance_in_category\": 8.5}], \"upcoming_events\": []}",
+      "expected_outcome": "false_positive",
+      "expected_notes": "LLM może zinterpretować to jako 'organic' (logical given the numbers), ale RZECZYWIŚCIE to ruch botów — wymaga sygnału z systemu anti-bot. Walidacja semantyczna nie wystarczy; potrzeba dodatkowych signal data."
     }
   ]
 }

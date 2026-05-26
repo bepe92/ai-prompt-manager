@@ -28,26 +28,42 @@
     {
       "id": "bike-85pct-vs-laptop-20pct",
       "label": "LapBike 85% off + Viking Laptop 20% off",
-      "description": "Mix of suspicious (85%) and legitimate (20%) deals. Tests assessment quality.",
+      "description": "Mix podejrzanej (85%) i legitymnej (20%) promocji. Testuje jakość oceny.",
       "input": "{\"deals\": [{\"product_id\": \"LAPBIKE\", \"product_name\": \"LapBike Carbon Road\", \"original_price\": 18990.0, \"deal_price\": 2849.0, \"discount_pct\": 85.0, \"currency\": \"SEK\"}, {\"product_id\": \"VIKLAP\", \"product_name\": \"Viking Laptop Ultra 15\", \"original_price\": 14990.0, \"deal_price\": 11990.0, \"discount_pct\": 20.0, \"currency\": \"NOK\"}]}",
       "expected_outcome": "pass",
-      "expected_notes": "LapBike assessed as likely pricing error, Viking Laptop as normal promotion"
+      "expected_notes": "LapBike opisany jako prawdopodobny błąd cenowy, Viking Laptop jako normalna promocja"
     },
     {
       "id": "decimal-place-error-99pct",
       "label": "99% off — decimal shift error",
-      "description": "1799 SEK earbuds 'discounted' to 17.99 SEK — classic decimal-point pricing bug.",
+      "description": "1799 SEK earbuds 'obniżone' do 17.99 SEK — klasyczny błąd przecinka.",
       "input": "{\"deals\": [{\"product_id\": \"AURBUDS\", \"product_name\": \"AuroraBuds Wireless Pro\", \"original_price\": 1799.0, \"deal_price\": 17.99, \"discount_pct\": 99.0, \"currency\": \"SEK\"}]}",
       "expected_outcome": "pass",
-      "expected_notes": "LLM should identify this as decimal shift / data import error"
+      "expected_notes": "LLM powinien zidentyfikować jako pomyłkę dziesiętną"
     },
     {
       "id": "seasonal-55pct-clearance",
       "label": "SkiBoot 55% — end-of-season clearance",
-      "description": "May = end of winter sport season in Norway. 55% discount on ski boots is plausible.",
+      "description": "Maj = koniec sezonu narciarskiego w Norwegii. 55% na buty narciarskie jest wiarygodne.",
       "input": "{\"deals\": [{\"product_id\": \"SKIBOOT\", \"product_name\": \"SkiBoot Elite 2026\", \"original_price\": 2499.0, \"deal_price\": 1124.55, \"discount_pct\": 55.0, \"currency\": \"NOK\"}]}",
       "expected_outcome": "pass",
-      "expected_notes": "Assessment should mention seasonal clearance / plausible promotion"
+      "expected_notes": "Ocena powinna wspomnieć sezonową wyprzedaż"
+    },
+    {
+      "id": "empty-deals",
+      "label": "Empty deals list (rejected)",
+      "description": "Brak deals do analizy. Agent musi zwrócić niepustą listę assessments.",
+      "input": "{\"deals\": []}",
+      "expected_outcome": "fail_validation",
+      "expected_notes": "Walidator list_nonempty odrzuca. To kontrakt: 'jeśli odpalasz agenta to zwróć przynajmniej jedną ocenę'."
+    },
+    {
+      "id": "false-positive-fake-product",
+      "label": "⚠️ False positive — wymyślony product_id",
+      "description": "Deal odnosi się do produktu którego nie ma w katalogu. LLM nie wie tego, oceni jak normalną promocję.",
+      "input": "{\"deals\": [{\"product_id\": \"FAKE-PROD-999\", \"product_name\": \"Imaginary Premium Spaceship\", \"original_price\": 999999.0, \"deal_price\": 499999.0, \"discount_pct\": 50.0, \"currency\": \"EUR\"}]}",
+      "expected_outcome": "false_positive",
+      "expected_notes": "Walidator akceptuje (struktura OK). Ale 'FAKE-PROD-999' nie istnieje w naszym katalogu — wina po stronie integracji danych. Pokazuje że walidacja schematu nie sprawdza referential integrity. W produkcji trzeba dodać cross-check z DB produktów."
     }
   ]
 }

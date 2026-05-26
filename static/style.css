@@ -285,6 +285,35 @@ body {
   font-size: 13px;
 }
 .errors-box ul { margin: 6px 0 0 18px; padding: 0; }
+
+.ai-analysis {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--primary-soft);
+  border-left: 4px solid var(--primary);
+  border-radius: 4px;
+}
+.ai-analysis-head {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.ai-analysis p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+.badge-ai {
+  background: var(--primary);
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+
+.pill--warn { background: var(--warn-soft); color: var(--warn); }
+
 .result-section { font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--ink-mute); margin: 16px 0 6px; }
 .raw-output {
   background: #fafbfd;

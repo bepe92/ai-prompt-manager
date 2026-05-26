@@ -28,26 +28,34 @@
     {
       "id": "black-friday-imminent",
       "label": "Black Friday — 3 days out (HIGH)",
-      "description": "Mass retail event very close. Should generate HIGH severity + concrete prep actions.",
+      "description": "Mass retail event bardzo blisko. Powinien wygenerować HIGH severity + konkretne akcje.",
       "input": "{\"events\": [{\"name\": \"Black Friday SE\", \"event_date\": \"2026-05-29\", \"days_until\": 3, \"countries\": [\"SE\", \"FI\"], \"affected_categories\": [\"Electronics\", \"Sport\"], \"description\": \"Largest discount event of the year.\"}]}",
       "expected_outcome": "pass",
-      "expected_notes": "severity=HIGH, recommendation with specific actions for Electronics+Sport"
+      "expected_notes": "severity=HIGH, rekomendacja z konkretnymi działaniami dla Electronics+Sport"
     },
     {
       "id": "midsommar-distant",
       "label": "Midsommar — 26 days out (INFO)",
-      "description": "Cultural event still distant. Should be INFO severity with long-lead recommendation.",
+      "description": "Cultural event jeszcze daleko. INFO severity z long-lead rekomendacją.",
       "input": "{\"events\": [{\"name\": \"Midsommar\", \"event_date\": \"2026-06-21\", \"days_until\": 26, \"countries\": [\"SE\", \"FI\"], \"affected_categories\": [\"Home\", \"Sport\"], \"description\": \"Peak summer holiday — outdoor and homeware demand spikes.\"}]}",
       "expected_outcome": "pass",
-      "expected_notes": "severity=INFO (>10 days), recommendation about supplier lead times / stock planning"
+      "expected_notes": "severity=INFO (>10 dni), rekomendacja o supplier lead times / stock planning"
     },
     {
       "id": "three-events-mixed-severities",
       "label": "Three events — mixed severities",
-      "description": "Tomorrow (HIGH), in 10 days (MEDIUM), in 169 days (INFO). Tests classification logic.",
+      "description": "Jutro (HIGH), za 10 dni (MEDIUM), za 169 dni (INFO). Testuje logikę klasyfikacji.",
       "input": "{\"events\": [{\"name\": \"Norwegian Constitution Day\", \"event_date\": \"2026-05-27\", \"days_until\": 1, \"countries\": [\"NO\"], \"affected_categories\": [\"Home\"], \"description\": \"National celebration.\"}, {\"name\": \"Singles' Day SE\", \"event_date\": \"2026-11-11\", \"days_until\": 169, \"countries\": [\"SE\", \"NO\", \"DK\", \"FI\"], \"affected_categories\": [\"Electronics\", \"Home\"], \"description\": \"Imported retail event.\"}, {\"name\": \"Nordic Phone X13 Launch\", \"event_date\": \"2026-06-05\", \"days_until\": 10, \"countries\": [\"SE\", \"NO\", \"DK\", \"FI\"], \"affected_categories\": [\"Electronics\"], \"description\": \"Fictional flagship launch.\"}]}",
       "expected_outcome": "pass",
-      "expected_notes": "Three recommendations with severities HIGH, MEDIUM, INFO respectively"
+      "expected_notes": "Trzy rekomendacje z severities HIGH, MEDIUM, INFO odpowiednio"
+    },
+    {
+      "id": "empty-events",
+      "label": "No upcoming events (rejected)",
+      "description": "Brak eventów w horyzoncie 14 dni. Agent dostaje pustą listę.",
+      "input": "{\"events\": []}",
+      "expected_outcome": "fail_validation",
+      "expected_notes": "Walidator list_nonempty odrzuca. Agent powinien być wywołany tylko gdy są eventy do raportowania."
     }
   ]
 }

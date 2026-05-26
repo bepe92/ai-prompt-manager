@@ -20,13 +20,13 @@
       "saved_at": "2026-05-26T08:00:00",
       "note": "Initial prompt — ported from ai-ecommerce-ops-assistant/src/agent_click_spike.py",
       "test_passed": true,
-      "test_input": "{\"flagged_products\": [{\"product_id\": \"NPX12P\", \"product_name\": \"Nordic Phone X12 Pro\", \"category\": \"Electronics\", \"clicks_today\": 3833, \"clicks_yesterday\": 1198, \"pct_change\": 219.9, \"dominance_in_category\": 1.85}], \"upcoming_events\": [{\"name\": \"Nordic Phone X13 Launch\", \"event_date\": \"2026-06-05\", \"affected_categories\": [\"Electronics\"]}]}",
+      "test_input": "{\"flagged_products\": [{\"product_id\": \"AURBUDS\", \"product_name\": \"AuroraBuds Wireless Pro\", \"category\": \"Electronics\", \"clicks_today\": 9999, \"clicks_yesterday\": 1000, \"pct_change\": 899.9, \"dominance_in_category\": 8.5}], \"upcoming_events\": []}",
       "test_output": {
         "interpretations": [
           {
-            "product_id": "NPX12P",
-            "severity": "MEDIUM",
-            "interpretation": "Wzrost 220% kliknięć jest wyjaśniany spekulacją rynkową i medialnym szumem związanym z zbliżającym się wydaniem konkurencyjnego modelu X13, który generuje zainteresowanie starszą generacją jako alternatywa cenowa."
+            "product_id": "AURBUDS",
+            "severity": "HIGH",
+            "interpretation": "Wzrost kliknięć o 900% bez powiązanego eventu wskazuje na anomalię danych — możliwy błąd indeksowania, bot scraping lub tymczasowy błąd w systemie śledzenia."
           }
         ]
       }

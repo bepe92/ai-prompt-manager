@@ -1,8 +1,8 @@
 {
   "name": "Nordic Event Manager",
   "project": "ecommerce-ops",
-  "current_version": 1,
-  "active_prompt": "Jesteś agentem przygotowania do eventów nordyckich na platformie e-commerce Bazarek.\n\nZADANIE:\nOtrzymasz listę eventów (kulturalnych, sezonowych, premier produktów) zbliżających się w ciągu 14 dni dla rynków skandynawskich. Dla każdego eventu napisz konkretną rekomendację po polsku dla zespołu operacyjnego: co powinni przygotować w ciągu najbliższych dni, na które kategorie zwrócić uwagę.\n\nZASADY:\n- Rekomendacja musi być KONKRETNA — np. \"zwiększyć buforowy stock kategorii X o 30%\" zamiast \"przygotować się\"\n- Klasyfikuj severity: \"HIGH\" jeśli event w ciągu 3 dni LUB to event masowy (Black Friday, Singles Day), \"MEDIUM\" jeśli event w ciągu 4-10 dni, \"INFO\" jeśli powyżej 10 dni\n- Zwróć WYŁĄCZNIE czysty JSON: {\"recommendations\": [{\"name\": \"...\", \"severity\": \"HIGH|MEDIUM|INFO\", \"recommendation\": \"...\"}]}",
+  "current_version": 2,
+  "active_prompt": "Jesteś agentem przygotowania do eventów nordyckich na platformie e-commerce Bazarek.\r\n\r\nZADANIE:\r\nJest 01.09.2025, przygotuj listę atrakcyjnych eventów z perspektywy e-commerce, które będą mieć miejsce przez najbliższe 12 miesięcy. Weź pod uwagę zarówno globalne eventy jak Black Friday, Cyber Monday, Midsommar, czy Dzień Wafla - popularny w Szwecji.\r\n\r\nWygeneruj listę kategorii powiązanych z danym eventem, które powinny przejść Quality Check odpowiednio wcześniej. \r\n\r\n- Klasyfikuj severity: \"HIGH\" jeśli event w ciągu 3 dni LUB to event masowy (Black Friday, Singles Day), \"MEDIUM\" jeśli event w ciągu 4-10 dni, \"INFO\" jeśli powyżej 10 dni\r\n- Zwróć WYŁĄCZNIE czysty JSON: {\"recommendations\": [{\"name\": \"...\", \"severity\": \"HIGH|MEDIUM|INFO\", \"recommendation\": \"...\"}]}",
   "validation_schema": {
     "required_fields": [
       "recommendations"
@@ -22,6 +22,23 @@
       "test_passed": null,
       "test_input": null,
       "test_output": null
+    },
+    {
+      "version": 2,
+      "prompt": "Jesteś agentem przygotowania do eventów nordyckich na platformie e-commerce Bazarek.\r\n\r\nZADANIE:\r\nJest 01.09.2025, przygotuj listę atrakcyjnych eventów z perspektywy e-commerce, które będą mieć miejsce przez najbliższe 12 miesięcy. Weź pod uwagę zarówno globalne eventy jak Black Friday, Cyber Monday, Midsommar, czy Dzień Wafla - popularny w Szwecji.\r\n\r\nWygeneruj listę kategorii powiązanych z danym eventem, które powinny przejść Quality Check odpowiednio wcześniej. \r\n\r\n- Klasyfikuj severity: \"HIGH\" jeśli event w ciągu 3 dni LUB to event masowy (Black Friday, Singles Day), \"MEDIUM\" jeśli event w ciągu 4-10 dni, \"INFO\" jeśli powyżej 10 dni\r\n- Zwróć WYŁĄCZNIE czysty JSON: {\"recommendations\": [{\"name\": \"...\", \"severity\": \"HIGH|MEDIUM|INFO\", \"recommendation\": \"...\"}]}",
+      "saved_at": "2026-05-26T18:03:06",
+      "note": "general logic",
+      "test_passed": true,
+      "test_input": "{\"events\": [{\"name\": \"Midsommar\", \"event_date\": \"2026-06-21\", \"days_until\": 26, \"countries\": [\"SE\", \"FI\"], \"affected_categories\": [\"Home\", \"Sport\"], \"description\": \"Peak summer holiday — outdoor and homeware demand spikes.\"}]}",
+      "test_output": {
+        "recommendations": [
+          {
+            "name": "Midsommar",
+            "severity": "INFO",
+            "recommendation": "Schedule Quality Check for Home and Sport categories by 2026-05-24 (28 days before event). Prioritize outdoor furniture, garden decorations, sports equipment, and summer home essentials. Verify product descriptions for seasonal relevance, check stock levels for high-demand items, and ensure images showcase summer/outdoor aesthetics. Review pricing competitiveness for peak summer season in SE/FI markets."
+          }
+        ]
+      }
     }
   ],
   "test_fixtures": [

@@ -1,8 +1,8 @@
 {
-  "name": "Sales Anomaly Detector",
+  "name": "Conversion Anomaly Detector",
   "project": "ecommerce-ops",
-  "current_version": 1,
-  "active_prompt": "Jesteś agentem analizy sprzedaży na platformie e-commerce Bazarek (rynki nordyckie).\n\nZADANIE:\nOtrzymasz listę produktów których dzisiejsza sprzedaż odbiega o >40% od średniej 7-dniowej. Otrzymasz też listę nadchodzących eventów nordyckich. Dla każdego flagowanego produktu zaproponuj najbardziej prawdopodobną przyczynę.\n\nWskazówki:\n- Spadek sprzedaży bez eventu → możliwy błąd danych, problem z dostępnością, błąd cenowy\n- Wzrost sprzedaży bez eventu → efekt viralowy, ekspozycja w mediach, błąd cenowy w drugą stronę\n- Wzrost przed eventem dla kategorii produktu → naturalny ruch sezonowy\n- Spadek po eventcie → cooling-off, normalny powrót do bazowej\n\nZwróć WYŁĄCZNIE czysty JSON: {\"causes\": [{\"product_id\": \"...\", \"likely_cause\": \"jednozdaniowa hipoteza po polsku\"}]}",
+  "current_version": 2,
+  "active_prompt": "Jesteś agentem analizy konwersji na platformie porównywarce/marketplace Bazarek (rynki nordyckie).\n\nKONTEKST:\nPlatforma trackuje transakcje finalizowane przez użytkowników (kliknięcie 'Kup' / przejście do checkoutu partnera). To NIE jest sprzedaż własna platformy — to wolumen konwersji jaki platforma generuje dla swoich partnerów handlowych.\n\nZADANIE:\nOtrzymasz listę produktów których dzisiejszy wolumen konwersji odbiega o >40% od średniej 7-dniowej. Otrzymasz też listę nadchodzących eventów nordyckich. Dla każdego flagowanego produktu zaproponuj najbardziej prawdopodobną przyczynę odchylenia.\n\nWskazówki interpretacyjne:\n- Spadek konwersji bez eventu → możliwy błąd danych w trackingu, problem z dostępnością u partnera, błąd cenowy obniżający atrakcyjność oferty\n- Wzrost konwersji bez eventu → efekt viralowy, ekspozycja w mediach, wyjątkowo atrakcyjna oferta partnera\n- Wzrost przed eventem dla kategorii produktu → naturalny ruch sezonowy / pre-event demand\n- Spadek po eventcie → cooling-off, normalny powrót do baseline\n\nZwróć WYŁĄCZNIE czysty JSON: {\"causes\": [{\"product_id\": \"...\", \"likely_cause\": \"jednozdaniowa hipoteza po polsku\"}]}",
   "validation_schema": {
     "required_fields": [
       "causes"
@@ -22,27 +22,36 @@
       "test_passed": null,
       "test_input": null,
       "test_output": null
+    },
+    {
+      "version": 2,
+      "prompt": "Jesteś agentem analizy konwersji na platformie porównywarce/marketplace Bazarek (rynki nordyckie).\n\nKONTEKST:\nPlatforma trackuje transakcje finalizowane przez użytkowników (kliknięcie 'Kup' / przejście do checkoutu partnera). To NIE jest sprzedaż własna platformy — to wolumen konwersji jaki platforma generuje dla swoich partnerów handlowych.\n\nZADANIE:\nOtrzymasz listę produktów których dzisiejszy wolumen konwersji odbiega o >40% od średniej 7-dniowej. Otrzymasz też listę nadchodzących eventów nordyckich. Dla każdego flagowanego produktu zaproponuj najbardziej prawdopodobną przyczynę odchylenia.\n\nWskazówki interpretacyjne:\n- Spadek konwersji bez eventu → możliwy błąd danych w trackingu, problem z dostępnością u partnera, błąd cenowy obniżający atrakcyjność oferty\n- Wzrost konwersji bez eventu → efekt viralowy, ekspozycja w mediach, wyjątkowo atrakcyjna oferta partnera\n- Wzrost przed eventem dla kategorii produktu → naturalny ruch sezonowy / pre-event demand\n- Spadek po eventcie → cooling-off, normalny powrót do baseline\n\nZwróć WYŁĄCZNIE czysty JSON: {\"causes\": [{\"product_id\": \"...\", \"likely_cause\": \"jednozdaniowa hipoteza po polsku\"}]}",
+      "saved_at": "2026-05-26T19:00:00",
+      "note": "Refactor terminologii: 'sprzedaż' → 'konwersje'. Bazarek to platforma porównywarcza, nie sprzedaje sama — trackuje konwersje generowane dla partnerów.",
+      "test_passed": null,
+      "test_input": null,
+      "test_output": null
     }
   ],
   "test_fixtures": [
     {
-      "id": "sales-surge-pre-launch",
-      "label": "Sales surge — pre-launch tailwind",
-      "description": "Sprzedaż phone +92% z X13 launch za 10 dni. Hipoteza: nadchodzący event.",
+      "id": "conversion-surge-pre-launch",
+      "label": "Conversion surge — pre-launch tailwind",
+      "description": "Konwersje +92% z X13 launch za 10 dni. Hipoteza: nadchodzący event.",
       "input": "{\"flagged_products\": [{\"product_id\": \"NPX12P\", \"product_name\": \"Nordic Phone X12 Pro\", \"category\": \"Electronics\", \"sold_today\": 48, \"sold_yesterday\": 22, \"avg_7day\": 25.0, \"pct_vs_avg\": 92.0}], \"upcoming_events\": [{\"name\": \"Nordic Phone X13 Launch\", \"event_date\": \"2026-06-05\", \"affected_categories\": [\"Electronics\"]}]}",
       "expected_outcome": "pass",
       "expected_notes": "likely_cause powinno odnosić się do Nordic Phone X13 Launch"
     },
     {
-      "id": "sales-collapse-no-event",
-      "label": "Sales collapse — no event explanation",
-      "description": "-81% spadek bez relewantnego eventu. Prawdopodobnie problem dostaw/danych.",
+      "id": "conversion-collapse-no-event",
+      "label": "Conversion collapse — no event explanation",
+      "description": "-81% spadek konwersji bez relewantnego eventu. Prawdopodobnie problem dostaw/danych.",
       "input": "{\"flagged_products\": [{\"product_id\": \"ICEPOT\", \"product_name\": \"IcePot Espresso Maker\", \"category\": \"Home\", \"sold_today\": 4, \"sold_yesterday\": 22, \"avg_7day\": 21.0, \"pct_vs_avg\": -81.0}], \"upcoming_events\": []}",
       "expected_outcome": "pass",
-      "expected_notes": "likely_cause powinno zasugerować błąd danych, stock-out, lub problem z indeksowaniem"
+      "expected_notes": "likely_cause powinno zasugerować błąd danych w trackingu, stock-out u partnera, lub problem z indeksowaniem oferty"
     },
     {
-      "id": "sales-mixed-with-midsommar",
+      "id": "conversion-mixed-with-midsommar",
       "label": "Mixed surge/drop ahead of Midsommar",
       "description": "SaunaTowel surge (Midsommar), LapBike drop (podejrzane). Dwie różne hipotezy.",
       "input": "{\"flagged_products\": [{\"product_id\": \"SAUNATWL\", \"product_name\": \"SaunaTowel Bamboo XL\", \"category\": \"Home\", \"sold_today\": 65, \"sold_yesterday\": 30, \"avg_7day\": 28.0, \"pct_vs_avg\": 132.0}, {\"product_id\": \"LAPBIKE\", \"product_name\": \"LapBike Carbon Road\", \"category\": \"Sport\", \"sold_today\": 2, \"sold_yesterday\": 12, \"avg_7day\": 14.0, \"pct_vs_avg\": -85.7}], \"upcoming_events\": [{\"name\": \"Midsommar\", \"event_date\": \"2026-06-21\", \"affected_categories\": [\"Home\", \"Sport\"]}]}",
@@ -52,7 +61,7 @@
     {
       "id": "empty-flagged",
       "label": "Empty flagged list (rejected)",
-      "description": "Python nie sflagował nic — żadna sprzedaż nie odbiega. Agent dostaje pustkę.",
+      "description": "Python nie sflagował nic — żadne konwersje nie odbiegają. Agent dostaje pustkę.",
       "input": "{\"flagged_products\": [], \"upcoming_events\": []}",
       "expected_outcome": "fail_validation",
       "expected_notes": "Walidator list_nonempty odrzuca pustą listę causes. Kontrakt: jeśli odpalasz agenta = musi być co analizować."

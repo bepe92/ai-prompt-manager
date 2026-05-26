@@ -19,33 +19,10 @@
       "prompt": "Jesteś agentem do wykrywania niezgodności ofert i produktów na platformie e-commerce Bazarek (rynki nordyckie).\n\nZADANIE:\nOtrzymasz listę \"kandydatów\" — par {offer, product}. Każda para ma:\n- nazwę oferty (offer.name)\n- nazwę produktu pod który oferta jest podpięta (product.name)\n- ceny obu\n\nDla każdej pary oceń, czy oferta semantycznie pasuje do produktu. Klasyczna anomalia: oferta akcesorium (np. \"Leather Case for X\") jest podpięta pod produkt główny (np. \"Phone X Pro\"), co psuje cenę referencyjną.\n\nZwróć JSON: {\"results\": [{\"offer_id\": \"...\", \"offer_name\": \"...\", \"product_id\": \"...\", \"product_name\": \"...\", \"offer_price\": ..., \"product_base_price\": ..., \"currency\": \"...\", \"severity\": \"HIGH|MEDIUM|LOW\", \"reason\": \"jednozdaniowe uzasadnienie po polsku\"}]}\n\nZASADY:\n- NIE wykonuj obliczeń. Tylko czytasz nazwy.\n- HIGH gdy oferta to wyraźnie akcesorium podpięte pod produkt główny.\n- Zwróć WYŁĄCZNIE czysty JSON, bez ```.",
       "saved_at": "2026-05-26T08:00:00",
       "note": "Initial prompt — ported from ai-ecommerce-ops-assistant/src/agent_price_anomaly.py",
-      "test_passed": true,
-      "test_input": "{\"candidates\": [{\"offer_id\": \"OFF-1\", \"offer_name\": \"Screen Protector for Fjord Tab 10\", \"product_id\": \"FJTAB10\", \"product_name\": \"Fjord Tab 10 Plus\", \"offer_price\": 49.0, \"product_base_price\": 4499.0, \"currency\": \"NOK\"}, {\"offer_id\": \"OFF-2\", \"offer_name\": \"Fjord Tab 10 Plus 256GB\", \"product_id\": \"FJTAB10\", \"product_name\": \"Fjord Tab 10 Plus\", \"offer_price\": 3990.0, \"product_base_price\": 4499.0, \"currency\": \"NOK\"}]}",
+      "test_passed": false,
+      "test_input": "{\"candidates\": []}",
       "test_output": {
-        "results": [
-          {
-            "offer_id": "OFF-1",
-            "offer_name": "Screen Protector for Fjord Tab 10",
-            "product_id": "FJTAB10",
-            "product_name": "Fjord Tab 10 Plus",
-            "offer_price": 49.0,
-            "product_base_price": 4499.0,
-            "currency": "NOK",
-            "severity": "HIGH",
-            "reason": "Oferta to akcesoriun (folia ochronna) podpięty pod produkt główny (tablet), co zniekształca cenę referencyjną."
-          },
-          {
-            "offer_id": "OFF-2",
-            "offer_name": "Fjord Tab 10 Plus 256GB",
-            "product_id": "FJTAB10",
-            "product_name": "Fjord Tab 10 Plus",
-            "offer_price": 3990.0,
-            "product_base_price": 4499.0,
-            "currency": "NOK",
-            "severity": "LOW",
-            "reason": "Oferta semantycznie pasuje do produktu (wariant pojemności), różnica ceny jest uzasadniona."
-          }
-        ]
+        "results": []
       }
     }
   ],

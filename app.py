@@ -23,6 +23,9 @@ PORT = int(os.environ.get("PORT", 5005))
 
 app = Flask(__name__, template_folder=str(ROOT / "templates"), static_folder=str(ROOT / "static"))
 app.secret_key = "prompt-manager-dev-key-not-for-production"
+# Default `tojson` filter escapes non-ASCII (ę -> ę), making Polish unreadable
+# in the rendered output panels. Force UTF-8 output everywhere.
+app.json.ensure_ascii = False
 
 
 def pm() -> PromptManager:

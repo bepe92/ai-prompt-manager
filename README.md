@@ -57,8 +57,44 @@ Prompt engineering is a real discipline. It deserves real tooling.
 | Tab | What it does |
 |---|---|
 | **📝 Editor** | Pick a project + a prompt. Edit the active prompt in a big textarea. Add a note ("dodano obsługę emaili w języku norweskim"). Save as a new version — the previous one stays in history, the new one becomes active. |
-| **⚗️ Tester** | Paste sample input. Click Run. See raw Claude output, parsed JSON, and a green PASSED / red FAILED pill from the per-prompt Pydantic validator. Pass/fail outcome is recorded on the active version. |
+| **⚗️ Tester** | Pick a **test fixture** from the dropdown (or paste your own input), click Run. See raw Claude output, parsed JSON, and a green PASSED / red FAILED pill from the per-prompt Pydantic validator. Pass/fail outcome is recorded on the active version. |
 | **🕓 History** | Every version ever saved, newest first. Each has its note, timestamp, test outcome, and one click to **restore** it as the active version. Nothing is ever overwritten. |
+
+### Test fixtures — regression suite that lives with the prompt
+
+Each prompt JSON ships with a `test_fixtures` array — predefined `(input, expected_outcome)` pairs that the Tester loads via a dropdown. No copy-pasting examples from chat logs or scratchpads.
+
+```json
+"test_fixtures": [
+  {
+    "id": "mercuria-tbd-price",
+    "label": "Mercuria — price TBD (should auto-reject)",
+    "description": "Tests null-over-guessing rule. Price marked TBD; LLM must return null; validator must reject.",
+    "input": "From: deals-desk@mercuria-energy.com\n...",
+    "expected_outcome": "fail_validation",
+    "expected_notes": "price_usd is None → validator complaints 'price_usd nie jest liczbą'"
+  }
+]
+```
+
+This solves three real problems:
+- **No memory loss.** Test inputs travel with the prompt in git; the dropdown is the same on every machine that clones the repo.
+- **Cheap regression checking.** Edit prompt → load fixture → click Run → compare to `expected_outcome`. ~$0.001 per test on Haiku 4.5.
+- **Self-documenting failure modes.** Browsing the dropdown is a guided tour of every weird case the prompt was designed to handle.
+
+In production this is where you'd plug in a golden dataset of real anonymised inputs, run them all on every prompt activation, and refuse to promote a prompt to prod if any regression fixture flips from `pass` to `fail_validation`.
+
+### Honest answer to "but your prompts are tuned to demo data"
+
+Yes — and that's exactly why this tooling exists. The production workflow is:
+
+1. Collect a real dataset from production (100–500 representative documents)
+2. Hand-annotate to establish ground truth
+3. Iterate the prompt against that dataset — measure accuracy, hallucination rate, token cost
+4. Deploy with monitoring; sample real outputs periodically
+5. When a new edge case appears, add it as a fixture and re-run the whole regression suite
+
+Steps 3 and 5 are exactly what the Editor + Tester + History triad makes cheap. Without this kind of harness, prompt engineering is folklore. With it, it's iterative software development with a contract, a test suite, and a rollback.
 
 ## Design rules visible in code
 

@@ -7,7 +7,7 @@ Import in your project:
     record = pm.load("email-tracker", "extraction")
     print(record.active_prompt)
 """
-from .manager import PromptManager, PromptRecord, PromptVersion
+from .manager import PromptManager, PromptRecord, PromptVersion, TestFixture
 from .tester import PromptTester, TestResult
 from .validator import PromptValidator
 
@@ -15,6 +15,7 @@ __all__ = [
     "PromptManager",
     "PromptRecord",
     "PromptVersion",
+    "TestFixture",
     "PromptTester",
     "TestResult",
     "PromptValidator",

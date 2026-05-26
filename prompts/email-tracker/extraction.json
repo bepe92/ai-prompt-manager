@@ -4,8 +4,17 @@
   "current_version": 1,
   "active_prompt": "Jesteś precyzyjnym asystentem danych w Shell Trading. Przeczytaj poniższą treść maila Deal Confirmation i wyciągnij z niej wyłącznie następujące dane:\n\n- broker: nazwa kontrahenta wysyłającego potwierdzenie (np. \"Vitol Trading S.A.\")\n- product: nazwa produktu (np. \"Brent Crude Oil\", \"Natural Gas\", \"Jet Fuel A1\")\n- volume_mt: wolumen w tonach metrycznych jako liczba (bez jednostki, bez przecinków)\n- price_usd: cena jednostkowa w USD jako liczba (bez waluty, bez jednostki)\n- price_unit: jednostka ceny (np. \"per barrel\", \"per MT\", \"per MMBtu\")\n- trade_date: data transakcji w formacie YYYY-MM-DD\n- reference: numer referencyjny transakcji (np. \"VT-2026-04821\")\n\nZwróć wynik w czystym formacie JSON, bez żadnego komentarza, bez markdown, bez ```. Jeśli któreś pole jest niedostępne lub niejednoznaczne (np. \"TBD\", \"pending\", brak), ustaw jego wartość na null. NIE zgaduj wartości.\n\nPrzykład poprawnej odpowiedzi:\n{\"broker\": \"Vitol Trading S.A.\", \"product\": \"Brent Crude Oil\", \"volume_mt\": 45000, \"price_usd\": 82.45, \"price_unit\": \"per barrel\", \"trade_date\": \"2026-05-25\", \"reference\": \"VT-2026-04821\"}",
   "validation_schema": {
-    "required_fields": ["broker", "product", "volume_mt", "price_usd", "trade_date"],
-    "optional_fields": ["price_unit", "reference"],
+    "required_fields": [
+      "broker",
+      "product",
+      "volume_mt",
+      "price_usd",
+      "trade_date"
+    ],
+    "optional_fields": [
+      "price_unit",
+      "reference"
+    ],
     "field_types": {
       "broker": "str_nonempty",
       "product": "str_nonempty",
@@ -23,9 +32,43 @@
       "prompt": "Jesteś precyzyjnym asystentem danych w Shell Trading. Przeczytaj poniższą treść maila Deal Confirmation i wyciągnij z niej wyłącznie następujące dane:\n\n- broker: nazwa kontrahenta wysyłającego potwierdzenie (np. \"Vitol Trading S.A.\")\n- product: nazwa produktu (np. \"Brent Crude Oil\", \"Natural Gas\", \"Jet Fuel A1\")\n- volume_mt: wolumen w tonach metrycznych jako liczba (bez jednostki, bez przecinków)\n- price_usd: cena jednostkowa w USD jako liczba (bez waluty, bez jednostki)\n- price_unit: jednostka ceny (np. \"per barrel\", \"per MT\", \"per MMBtu\")\n- trade_date: data transakcji w formacie YYYY-MM-DD\n- reference: numer referencyjny transakcji (np. \"VT-2026-04821\")\n\nZwróć wynik w czystym formacie JSON, bez żadnego komentarza, bez markdown, bez ```. Jeśli któreś pole jest niedostępne lub niejednoznaczne (np. \"TBD\", \"pending\", brak), ustaw jego wartość na null. NIE zgaduj wartości.\n\nPrzykład poprawnej odpowiedzi:\n{\"broker\": \"Vitol Trading S.A.\", \"product\": \"Brent Crude Oil\", \"volume_mt\": 45000, \"price_usd\": 82.45, \"price_unit\": \"per barrel\", \"trade_date\": \"2026-05-25\", \"reference\": \"VT-2026-04821\"}",
       "saved_at": "2026-05-25T10:00:00",
       "note": "Initial production prompt — ported from ai-email-trade-tracker/src/parser.py",
-      "test_passed": null,
-      "test_input": null,
-      "test_output": null
+      "test_passed": false,
+      "test_input": "From: deals-desk@mercuria-energy.com\r\nSubject: POTWIERDZENIE TRANSAKCJI ME/2026/00725\r\n\r\nConfirmation - PRICE TBD:\r\n\r\nME/2026/00725 | 28-05-2026 | Naphtha | 22,000 MT | TBD - awaiting benchmark | CIF Rotterdam | September 2026\r\n\r\nMercuria Energy Trading",
+      "test_output": {
+        "broker": "Mercuria Energy Trading",
+        "product": "Naphtha",
+        "volume_mt": 22000,
+        "price_usd": null,
+        "price_unit": null,
+        "trade_date": "2026-05-28",
+        "reference": "ME/2026/00725"
+      }
+    }
+  ],
+  "test_fixtures": [
+    {
+      "id": "vitol-clean",
+      "label": "Vitol — clean text email",
+      "description": "Happy path. Standard plain-text confirmation from Vitol, all fields visible.",
+      "input": "From: deals@vitol-trading.com\nSubject: POTWIERDZENIE TRANSAKCJI - VT-2026-04821\n\nDear Trading Desk,\n\nReference:    VT-2026-04821\nTrade Date:   25-May-2026\nProduct:      Brent Crude Oil\nVolume:       45,000 MT\nPrice:        82.45 USD per barrel\nDelivery:     FOB Rotterdam, June 2026\n\nVitol Trading S.A.",
+      "expected_outcome": "pass",
+      "expected_notes": "All 7 fields extracted, broker='Vitol Trading S.A.', volume=45000, price=82.45"
+    },
+    {
+      "id": "mercuria-tbd-price",
+      "label": "Mercuria — price TBD (should auto-reject)",
+      "description": "Tests null-over-guessing rule. Price marked TBD; LLM must return null; validator must reject.",
+      "input": "From: deals-desk@mercuria-energy.com\nSubject: POTWIERDZENIE TRANSAKCJI ME/2026/00725\n\nConfirmation - PRICE TBD:\n\nME/2026/00725 | 28-05-2026 | Naphtha | 22,000 MT | TBD - awaiting benchmark | CIF Rotterdam | September 2026\n\nMercuria Energy Trading",
+      "expected_outcome": "fail_validation",
+      "expected_notes": "price_usd is None → validator complaints 'price_usd nie jest liczbą'"
+    },
+    {
+      "id": "trafigura-table-format",
+      "label": "Trafigura — HTML table style, DD/MM/YYYY date",
+      "description": "Different broker layout (table) and European date format. LLM must convert DD/MM/YYYY → YYYY-MM-DD.",
+      "input": "TRAFIGURA MARKETS LTD - DEAL CONFIRMATION\n\nConfirmation ID | TFG-29384\nTrade Date      | 25/05/2026\nCommodity       | Natural Gas (Henry Hub)\nQuantity        | 120,000 MT\nUnit Price      | USD 3.85 / MMBtu\nDelivery Window | July 2026",
+      "expected_outcome": "pass",
+      "expected_notes": "trade_date should be '2026-05-25' (converted from '25/05/2026')"
     }
   ]
 }

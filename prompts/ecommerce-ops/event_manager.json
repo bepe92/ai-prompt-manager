@@ -4,9 +4,13 @@
   "current_version": 1,
   "active_prompt": "Jesteś agentem przygotowania do eventów nordyckich na platformie e-commerce Bazarek.\n\nZADANIE:\nOtrzymasz listę eventów (kulturalnych, sezonowych, premier produktów) zbliżających się w ciągu 14 dni dla rynków skandynawskich. Dla każdego eventu napisz konkretną rekomendację po polsku dla zespołu operacyjnego: co powinni przygotować w ciągu najbliższych dni, na które kategorie zwrócić uwagę.\n\nZASADY:\n- Rekomendacja musi być KONKRETNA — np. \"zwiększyć buforowy stock kategorii X o 30%\" zamiast \"przygotować się\"\n- Klasyfikuj severity: \"HIGH\" jeśli event w ciągu 3 dni LUB to event masowy (Black Friday, Singles Day), \"MEDIUM\" jeśli event w ciągu 4-10 dni, \"INFO\" jeśli powyżej 10 dni\n- Zwróć WYŁĄCZNIE czysty JSON: {\"recommendations\": [{\"name\": \"...\", \"severity\": \"HIGH|MEDIUM|INFO\", \"recommendation\": \"...\"}]}",
   "validation_schema": {
-    "required_fields": ["recommendations"],
+    "required_fields": [
+      "recommendations"
+    ],
     "optional_fields": [],
-    "field_types": {"recommendations": "list_nonempty"},
+    "field_types": {
+      "recommendations": "list_nonempty"
+    },
     "extra_forbidden": true
   },
   "versions": [
@@ -18,6 +22,32 @@
       "test_passed": null,
       "test_input": null,
       "test_output": null
+    }
+  ],
+  "test_fixtures": [
+    {
+      "id": "black-friday-imminent",
+      "label": "Black Friday — 3 days out (HIGH)",
+      "description": "Mass retail event very close. Should generate HIGH severity + concrete prep actions.",
+      "input": "{\"events\": [{\"name\": \"Black Friday SE\", \"event_date\": \"2026-05-29\", \"days_until\": 3, \"countries\": [\"SE\", \"FI\"], \"affected_categories\": [\"Electronics\", \"Sport\"], \"description\": \"Largest discount event of the year.\"}]}",
+      "expected_outcome": "pass",
+      "expected_notes": "severity=HIGH, recommendation with specific actions for Electronics+Sport"
+    },
+    {
+      "id": "midsommar-distant",
+      "label": "Midsommar — 26 days out (INFO)",
+      "description": "Cultural event still distant. Should be INFO severity with long-lead recommendation.",
+      "input": "{\"events\": [{\"name\": \"Midsommar\", \"event_date\": \"2026-06-21\", \"days_until\": 26, \"countries\": [\"SE\", \"FI\"], \"affected_categories\": [\"Home\", \"Sport\"], \"description\": \"Peak summer holiday — outdoor and homeware demand spikes.\"}]}",
+      "expected_outcome": "pass",
+      "expected_notes": "severity=INFO (>10 days), recommendation about supplier lead times / stock planning"
+    },
+    {
+      "id": "three-events-mixed-severities",
+      "label": "Three events — mixed severities",
+      "description": "Tomorrow (HIGH), in 10 days (MEDIUM), in 169 days (INFO). Tests classification logic.",
+      "input": "{\"events\": [{\"name\": \"Norwegian Constitution Day\", \"event_date\": \"2026-05-27\", \"days_until\": 1, \"countries\": [\"NO\"], \"affected_categories\": [\"Home\"], \"description\": \"National celebration.\"}, {\"name\": \"Singles' Day SE\", \"event_date\": \"2026-11-11\", \"days_until\": 169, \"countries\": [\"SE\", \"NO\", \"DK\", \"FI\"], \"affected_categories\": [\"Electronics\", \"Home\"], \"description\": \"Imported retail event.\"}, {\"name\": \"Nordic Phone X13 Launch\", \"event_date\": \"2026-06-05\", \"days_until\": 10, \"countries\": [\"SE\", \"NO\", \"DK\", \"FI\"], \"affected_categories\": [\"Electronics\"], \"description\": \"Fictional flagship launch.\"}]}",
+      "expected_outcome": "pass",
+      "expected_notes": "Three recommendations with severities HIGH, MEDIUM, INFO respectively"
     }
   ]
 }

@@ -46,6 +46,22 @@ class PromptVersion:
 
 
 @dataclass
+class TestFixture:
+    """A canned (input, expected outcome) pair used for regression testing a prompt.
+
+    Stored next to the prompt in the same JSON file, so a prompt and its
+    regression suite move together through git. Updating the prompt? Re-run
+    every fixture from the UI dropdown — no copy-pasting from a chat history.
+    """
+    id: str
+    label: str                                  # human-readable name shown in the dropdown
+    description: str = ""                       # one-sentence explanation of the case
+    input: str = ""                             # the text/JSON to feed to the prompt
+    expected_outcome: str = "pass"              # "pass" | "fail_validation" | "fail_parse"
+    expected_notes: str = ""                    # what the trader should look for
+
+
+@dataclass
 class PromptRecord:
     name: str
     project: str
@@ -53,6 +69,7 @@ class PromptRecord:
     active_prompt: str
     validation_schema: dict[str, Any]
     versions: list[PromptVersion] = field(default_factory=list)
+    test_fixtures: list[TestFixture] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -62,6 +79,7 @@ class PromptRecord:
             "active_prompt": self.active_prompt,
             "validation_schema": self.validation_schema,
             "versions": [asdict(v) for v in self.versions],
+            "test_fixtures": [asdict(f) for f in self.test_fixtures],
         }
 
 
@@ -209,7 +227,12 @@ class PromptManager:
             active_prompt=data["active_prompt"],
             validation_schema=data.get("validation_schema", {}),
             versions=[PromptVersion(**v) for v in data.get("versions", [])],
+            test_fixtures=[TestFixture(**f) for f in data.get("test_fixtures", [])],
         )
+
+    def get_fixture(self, project: str, name: str, fixture_id: str) -> "TestFixture | None":
+        record = self.load(project, name)
+        return next((f for f in record.test_fixtures if f.id == fixture_id), None)
 
 
 def _now_iso() -> str:

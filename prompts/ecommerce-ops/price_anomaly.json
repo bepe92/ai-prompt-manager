@@ -4,9 +4,13 @@
   "current_version": 1,
   "active_prompt": "Jesteś agentem do wykrywania niezgodności ofert i produktów na platformie e-commerce Bazarek (rynki nordyckie).\n\nZADANIE:\nOtrzymasz listę \"kandydatów\" — par {offer, product}. Każda para ma:\n- nazwę oferty (offer.name)\n- nazwę produktu pod który oferta jest podpięta (product.name)\n- ceny obu\n\nDla każdej pary oceń, czy oferta semantycznie pasuje do produktu. Klasyczna anomalia: oferta akcesorium (np. \"Leather Case for X\") jest podpięta pod produkt główny (np. \"Phone X Pro\"), co psuje cenę referencyjną.\n\nZwróć JSON: {\"results\": [{\"offer_id\": \"...\", \"offer_name\": \"...\", \"product_id\": \"...\", \"product_name\": \"...\", \"offer_price\": ..., \"product_base_price\": ..., \"currency\": \"...\", \"severity\": \"HIGH|MEDIUM|LOW\", \"reason\": \"jednozdaniowe uzasadnienie po polsku\"}]}\n\nZASADY:\n- NIE wykonuj obliczeń. Tylko czytasz nazwy.\n- HIGH gdy oferta to wyraźnie akcesorium podpięte pod produkt główny.\n- Zwróć WYŁĄCZNIE czysty JSON, bez ```.",
   "validation_schema": {
-    "required_fields": ["results"],
+    "required_fields": [
+      "results"
+    ],
     "optional_fields": [],
-    "field_types": {"results": "list_nonempty"},
+    "field_types": {
+      "results": "list_nonempty"
+    },
     "extra_forbidden": true
   },
   "versions": [
@@ -18,6 +22,32 @@
       "test_passed": null,
       "test_input": null,
       "test_output": null
+    }
+  ],
+  "test_fixtures": [
+    {
+      "id": "leather-case-under-phone",
+      "label": "Leather Case under flagship phone (classic anomaly)",
+      "description": "Accessory offer indexed under main product — drags reference price from 8999 → 299 SEK.",
+      "input": "{\"candidates\": [{\"offer_id\": \"OFF-NPX12P-XX\", \"offer_name\": \"Leather Case for Nordic Phone X12\", \"product_id\": \"NPX12P\", \"product_name\": \"Nordic Phone X12 Pro\", \"offer_price\": 299.0, \"product_base_price\": 8999.0, \"currency\": \"SEK\"}]}",
+      "expected_outcome": "pass",
+      "expected_notes": "severity=HIGH, reason about accessory mismatch"
+    },
+    {
+      "id": "legitimate-promo",
+      "label": "Legitimate Black Friday promo",
+      "description": "Same product, ~50% off — a real promotion, not an anomaly.",
+      "input": "{\"candidates\": [{\"offer_id\": \"OFF-NPX12P-01\", \"offer_name\": \"Nordic Phone X12 Pro - Black Friday Promo\", \"product_id\": \"NPX12P\", \"product_name\": \"Nordic Phone X12 Pro\", \"offer_price\": 4499.0, \"product_base_price\": 8999.0, \"currency\": \"SEK\"}]}",
+      "expected_outcome": "pass",
+      "expected_notes": "severity=LOW, LLM should recognize semantic match despite price gap"
+    },
+    {
+      "id": "mixed-candidates",
+      "label": "Mixed batch — accessory + storage variant",
+      "description": "Two candidates: a screen protector mismatch AND a legit 256GB variant. Expect two different severities.",
+      "input": "{\"candidates\": [{\"offer_id\": \"OFF-1\", \"offer_name\": \"Screen Protector for Fjord Tab 10\", \"product_id\": \"FJTAB10\", \"product_name\": \"Fjord Tab 10 Plus\", \"offer_price\": 49.0, \"product_base_price\": 4499.0, \"currency\": \"NOK\"}, {\"offer_id\": \"OFF-2\", \"offer_name\": \"Fjord Tab 10 Plus 256GB\", \"product_id\": \"FJTAB10\", \"product_name\": \"Fjord Tab 10 Plus\", \"offer_price\": 3990.0, \"product_base_price\": 4499.0, \"currency\": \"NOK\"}]}",
+      "expected_outcome": "pass",
+      "expected_notes": "Two results: first HIGH (accessory), second LOW (legitimate variant)"
     }
   ]
 }

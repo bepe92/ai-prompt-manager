@@ -4,9 +4,13 @@
   "current_version": 1,
   "active_prompt": "Jesteś agentem do oceny daily deals na platformie e-commerce Bazarek.\n\nZADANIE:\nOtrzymasz listę ofert dziennych z procentem obniżki (Python już policzył). Dla każdej oferty napisz jednozdaniową ocenę po polsku: czy to wygląda jak legalna promocja, czy raczej błąd danych / błąd cenowy.\n\nWskazówki do interpretacji:\n- Obniżka 10-50% to typowa promocja\n- 50-70% to mocna wyprzedaż (koniec sezonu, stock clearance) — możliwa ale nietypowa\n- >70% to zwykle błąd: pomyłka w cenach, pomylone wartości jednostkowe, źle przeniesione wartości z arkusza dostawcy\n\nZwróć WYŁĄCZNIE czysty JSON: {\"assessments\": [{\"product_id\": \"...\", \"assessment\": \"jednozdaniowy opis po polsku\"}]}\n\nNIE klasyfikuj risk_level — Python już to zrobił. Twoja rola to opis.",
   "validation_schema": {
-    "required_fields": ["assessments"],
+    "required_fields": [
+      "assessments"
+    ],
     "optional_fields": [],
-    "field_types": {"assessments": "list_nonempty"},
+    "field_types": {
+      "assessments": "list_nonempty"
+    },
     "extra_forbidden": true
   },
   "versions": [
@@ -18,6 +22,32 @@
       "test_passed": null,
       "test_input": null,
       "test_output": null
+    }
+  ],
+  "test_fixtures": [
+    {
+      "id": "bike-85pct-vs-laptop-20pct",
+      "label": "LapBike 85% off + Viking Laptop 20% off",
+      "description": "Mix of suspicious (85%) and legitimate (20%) deals. Tests assessment quality.",
+      "input": "{\"deals\": [{\"product_id\": \"LAPBIKE\", \"product_name\": \"LapBike Carbon Road\", \"original_price\": 18990.0, \"deal_price\": 2849.0, \"discount_pct\": 85.0, \"currency\": \"SEK\"}, {\"product_id\": \"VIKLAP\", \"product_name\": \"Viking Laptop Ultra 15\", \"original_price\": 14990.0, \"deal_price\": 11990.0, \"discount_pct\": 20.0, \"currency\": \"NOK\"}]}",
+      "expected_outcome": "pass",
+      "expected_notes": "LapBike assessed as likely pricing error, Viking Laptop as normal promotion"
+    },
+    {
+      "id": "decimal-place-error-99pct",
+      "label": "99% off — decimal shift error",
+      "description": "1799 SEK earbuds 'discounted' to 17.99 SEK — classic decimal-point pricing bug.",
+      "input": "{\"deals\": [{\"product_id\": \"AURBUDS\", \"product_name\": \"AuroraBuds Wireless Pro\", \"original_price\": 1799.0, \"deal_price\": 17.99, \"discount_pct\": 99.0, \"currency\": \"SEK\"}]}",
+      "expected_outcome": "pass",
+      "expected_notes": "LLM should identify this as decimal shift / data import error"
+    },
+    {
+      "id": "seasonal-55pct-clearance",
+      "label": "SkiBoot 55% — end-of-season clearance",
+      "description": "May = end of winter sport season in Norway. 55% discount on ski boots is plausible.",
+      "input": "{\"deals\": [{\"product_id\": \"SKIBOOT\", \"product_name\": \"SkiBoot Elite 2026\", \"original_price\": 2499.0, \"deal_price\": 1124.55, \"discount_pct\": 55.0, \"currency\": \"NOK\"}]}",
+      "expected_outcome": "pass",
+      "expected_notes": "Assessment should mention seasonal clearance / plausible promotion"
     }
   ]
 }

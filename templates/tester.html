@@ -3,13 +3,52 @@
   {% include "_selector.html" %}
 
   {% if record %}
+    {# ===== Fixture loader (GET form so changing the dropdown navigates to the prefilled state) ===== #}
+    {% if record.test_fixtures %}
+      <form method="get" class="fixture-bar card">
+        <input type="hidden" name="project" value="{{ project }}">
+        <input type="hidden" name="name" value="{{ name }}">
+
+        <label for="fixture-pick" class="form-label inline">📚 Load test fixture</label>
+        <select id="fixture-pick" name="fixture_id" onchange="this.form.submit()">
+          <option value="">— wybierz przypadek testowy —</option>
+          {% for f in record.test_fixtures %}
+            <option value="{{ f.id }}" {% if selected_fixture and selected_fixture.id == f.id %}selected{% endif %}>
+              {{ f.label }} {% if f.expected_outcome == 'pass' %}✅{% else %}❌{% endif %}
+            </option>
+          {% endfor %}
+        </select>
+
+        {% if selected_fixture %}
+          <span class="fixture-meta">
+            <strong>{{ selected_fixture.label }}</strong> —
+            <span class="muted small">{{ selected_fixture.description }}</span>
+            <span class="pill {% if selected_fixture.expected_outcome == 'pass' %}pill--ok{% else %}pill--fail{% endif %}">
+              expected: {{ selected_fixture.expected_outcome }}
+            </span>
+          </span>
+        {% endif %}
+
+        <span class="muted small fixture-help">
+          Fixtures są zapisane w <code>prompts/{{ project }}/{{ name }}.json</code> → pole <code>test_fixtures</code>. Wszystko w gicie, nic do zapamiętania.
+        </span>
+      </form>
+    {% endif %}
+
     <div class="tester-split">
       <form method="post" class="tester-input card">
         <input type="hidden" name="project" value="{{ project }}">
         <input type="hidden" name="name" value="{{ name }}">
+        {% if selected_fixture %}<input type="hidden" name="fixture_id" value="{{ selected_fixture.id }}">{% endif %}
 
         <h2 class="card-title">⚗️ Test input</h2>
-        <p class="muted small">Wklej przykładowy input — email, fragment tekstu, JSON z danymi — coś co pasuje do tego promptu.</p>
+        <p class="muted small">
+          {% if selected_fixture %}
+            Wczytano fixture <strong>{{ selected_fixture.label }}</strong> — możesz edytować przed uruchomieniem.
+          {% else %}
+            Wybierz fixture z dropdownu powyżej, albo wklej własny input.
+          {% endif %}
+        </p>
 
         <textarea name="test_input" class="prompt-area" spellcheck="false" placeholder="wklej tu treść do przetestowania promptu">{{ test_input }}</textarea>
 
@@ -20,6 +59,9 @@
 
         <div class="form-actions">
           <button type="submit" name="action" value="run" class="btn btn--primary">▶ Uruchom test</button>
+          {% if selected_fixture and selected_fixture.expected_notes %}
+            <p class="muted small">Co sprawdzać w wyniku: {{ selected_fixture.expected_notes }}</p>
+          {% endif %}
         </div>
       </form>
 
@@ -54,12 +96,12 @@
           {% endif %}
 
           {% if result.is_valid %}
-            <p class="muted small">✅ Walidacja przeszła. Wynik testu zapisany na v{{ record.current_version }}. Jeśli rezultat Ci pasuje, zostaw — ta wersja jest już aktywna.</p>
+            <p class="muted small">✅ Walidacja przeszła. Wynik testu zapisany na v{{ record.current_version }}.</p>
           {% else %}
             <p class="muted small">❌ Walidacja nie przeszła. Wróć do <a href="{{ url_for('editor', project=project, name=name) }}">Editora</a>, popraw prompt i zapisz nową wersję.</p>
           {% endif %}
         {% else %}
-          <p class="muted small">Wynik pojawi się tutaj po uruchomieniu testu. Po prawej zobaczysz status walidacji Pydantic, surowy output i sparsowany JSON.</p>
+          <p class="muted small">Wynik pojawi się tutaj po uruchomieniu testu.</p>
         {% endif %}
       </div>
     </div>

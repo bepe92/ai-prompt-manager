@@ -96,11 +96,23 @@ def tester():
     project, name = _resolve_selection()
     if not project or not name:
         return render_template("tester.html", project=None, name=None, record=None,
-                               result=None, test_input="", active_tab="tester")
+                               result=None, test_input="", selected_fixture=None, active_tab="tester")
 
     record = pm().load(project, name)
     result = None
-    test_input = request.form.get("test_input", "")
+    selected_fixture_id = request.values.get("fixture_id", "")
+    selected_fixture = pm().get_fixture(project, name, selected_fixture_id) if selected_fixture_id else None
+
+    # Choose where the textarea content comes from:
+    # - POST with explicit test_input: trader edited the textarea
+    # - GET with fixture_id: trader picked a fixture from the dropdown, prefill
+    # - otherwise: empty
+    if request.method == "POST":
+        test_input = request.form.get("test_input", "")
+    elif selected_fixture:
+        test_input = selected_fixture.input
+    else:
+        test_input = ""
 
     if request.method == "POST" and request.form.get("action") == "run":
         if not test_input.strip():
@@ -129,7 +141,8 @@ def tester():
     return render_template(
         "tester.html",
         project=project, name=name, record=record,
-        result=result, test_input=test_input, active_tab="tester",
+        result=result, test_input=test_input,
+        selected_fixture=selected_fixture, active_tab="tester",
     )
 
 

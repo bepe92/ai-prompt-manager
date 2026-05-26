@@ -4,9 +4,13 @@
   "current_version": 1,
   "active_prompt": "Jesteś agentem analizy ruchu (kliknięć) na platformie e-commerce Bazarek.\n\nZADANIE:\nOtrzymasz listę produktów z anomaliami w kliknięciach — Python już je wykrył:\n  (a) klikalność dziś jest 2x lub więcej wyższa niż #2 w kategorii, LUB\n  (b) wzrost o >150% względem dnia poprzedniego.\n\nDla każdego produktu napisz jednozdaniową INTERPRETACJĘ po polsku:\n  - \"organic\": realny ruch — viral, news media, premiera, event sezonowy\n  - \"data_anomaly\": coś jest nie tak — błąd indeksowania, bot scraping, błąd cenowy który przyciąga kliki\n\nOtrzymasz też kalendarz nadchodzących eventów — wykorzystaj go.\n\nKLASYFIKUJ severity:\n- \"HIGH\": wzrost >300% bez wytłumaczenia eventem\n- \"MEDIUM\": wzrost 150-300% lub dominacja kategorii bez eventu\n- \"LOW\": wzrost znaczący ale wyjaśnialny eventem\n\nZwróć WYŁĄCZNIE czysty JSON: {\"interpretations\": [{\"product_id\": \"...\", \"severity\": \"...\", \"interpretation\": \"...\"}]}",
   "validation_schema": {
-    "required_fields": ["interpretations"],
+    "required_fields": [
+      "interpretations"
+    ],
     "optional_fields": [],
-    "field_types": {"interpretations": "list_nonempty"},
+    "field_types": {
+      "interpretations": "list_nonempty"
+    },
     "extra_forbidden": true
   },
   "versions": [
@@ -18,6 +22,32 @@
       "test_passed": null,
       "test_input": null,
       "test_output": null
+    }
+  ],
+  "test_fixtures": [
+    {
+      "id": "phone-spike-explained-by-launch",
+      "label": "Phone click spike — explained by launch event",
+      "description": "220% spike with X13 launch in 10 days. Should be classified as ORGANIC, severity LOW.",
+      "input": "{\"flagged_products\": [{\"product_id\": \"NPX12P\", \"product_name\": \"Nordic Phone X12 Pro\", \"category\": \"Electronics\", \"clicks_today\": 3833, \"clicks_yesterday\": 1198, \"pct_change\": 219.9, \"dominance_in_category\": 1.85}], \"upcoming_events\": [{\"name\": \"Nordic Phone X13 Launch\", \"event_date\": \"2026-06-05\", \"affected_categories\": [\"Electronics\"]}]}",
+      "expected_outcome": "pass",
+      "expected_notes": "severity=LOW, interpretation references organic pre-launch interest"
+    },
+    {
+      "id": "sauna-heater-unexplained-spike",
+      "label": "Sauna heater spike — no event (HIGH anomaly)",
+      "description": "336% spike + 4.4x category dominance, no relevant event. Likely data anomaly.",
+      "input": "{\"flagged_products\": [{\"product_id\": \"SAUNAFX\", \"product_name\": \"SaunaFlex Smart Heater\", \"category\": \"Home\", \"clicks_today\": 4800, \"clicks_yesterday\": 1100, \"pct_change\": 336.4, \"dominance_in_category\": 4.38}], \"upcoming_events\": []}",
+      "expected_outcome": "pass",
+      "expected_notes": "severity=HIGH, interpretation='data_anomaly' — should suggest verification"
+    },
+    {
+      "id": "mixed-organic-and-anomaly",
+      "label": "Mixed: SkiBoot suspicious, AuroraBuds organic",
+      "description": "SkiBoot 328% off-season → anomaly. AuroraBuds 165% with phone launch nearby → organic halo.",
+      "input": "{\"flagged_products\": [{\"product_id\": \"SKIBOOT\", \"product_name\": \"SkiBoot Elite 2026\", \"category\": \"Sport\", \"clicks_today\": 1200, \"clicks_yesterday\": 280, \"pct_change\": 328.6, \"dominance_in_category\": 2.1}, {\"product_id\": \"AURBUDS\", \"product_name\": \"AuroraBuds Wireless Pro\", \"category\": \"Electronics\", \"clicks_today\": 4500, \"clicks_yesterday\": 1700, \"pct_change\": 164.7, \"dominance_in_category\": 1.2}], \"upcoming_events\": [{\"name\": \"Nordic Phone X13 Launch\", \"event_date\": \"2026-06-05\", \"affected_categories\": [\"Electronics\"]}]}",
+      "expected_outcome": "pass",
+      "expected_notes": "Two interpretations: SkiBoot HIGH/data_anomaly, AuroraBuds LOW/organic"
     }
   ]
 }

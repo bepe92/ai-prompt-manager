@@ -215,6 +215,35 @@ body {
 }
 .schema-pre.small { font-size: 11.5px; }
 
+/* ===== Fixture bar (above the tester) ===== */
+.fixture-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  background: var(--primary-soft);
+  border-left: 3px solid var(--primary);
+}
+.fixture-bar .form-label.inline { margin: 0; }
+.fixture-bar select {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  background: white;
+  min-width: 320px;
+}
+.fixture-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.fixture-help { margin-left: auto; }
+
 /* ===== Tester layout ===== */
 .tester-split {
   display: grid;

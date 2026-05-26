@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Prompt Manager{% if record %} — {{ record.name }}{% endif %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo-mark">✎</span>
+      <span class="brand-name">AI Prompt Manager</span>
+      <span class="brand-sub">edit · test · version — across all your AI projects</span>
+    </div>
+    <div class="topbar-meta">
+      {{ projects|length }} project(s) · file-backed history
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <a href="{{ url_for('editor', project=project, name=name) if project and name else url_for('editor') }}"
+       class="tab {% if active_tab == 'editor' %}is-active{% endif %}">📝 Editor</a>
+    <a href="{{ url_for('tester', project=project, name=name) if project and name else url_for('tester') }}"
+       class="tab {% if active_tab == 'tester' %}is-active{% endif %}">⚗️ Tester</a>
+    <a href="{{ url_for('history', project=project, name=name) if project and name else url_for('history') }}"
+       class="tab {% if active_tab == 'history' %}is-active{% endif %}">🕓 History</a>
+  </nav>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flashes">
+        {% for category, msg in messages %}
+          <div class="flash flash--{{ category }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <span>AI Prompt Manager · file-backed · immutable version history · <code>prompt_manager</code> is importable in your projects</span>
+  </footer>
+</body>
+</html>

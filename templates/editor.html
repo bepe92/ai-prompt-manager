@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+  {% include "_selector.html" %}
+
+  {% if record %}
+    <form method="post" action="{{ url_for('save_version') }}" class="editor-form card">
+      <input type="hidden" name="project" value="{{ project }}">
+      <input type="hidden" name="name" value="{{ name }}">
+
+      <h1 class="page-title">{{ record.name }}</h1>
+      <p class="page-sub">
+        Project: <code>{{ record.project }}</code> · File: <code>prompts/{{ project }}/{{ name }}.json</code> · Active: <strong>v{{ record.current_version }}</strong>
+      </p>
+
+      <label for="prompt-text" class="form-label">Active prompt (edit and save as a new version)</label>
+      <textarea id="prompt-text" name="prompt" class="prompt-area" spellcheck="false">{{ record.active_prompt }}</textarea>
+
+      <label for="note" class="form-label">Note for this version <span class="muted small">(np. „dodano obsługę emaili w języku norweskim")</span></label>
+      <input id="note" name="note" type="text" class="note-input" maxlength="200" placeholder="opisz co zmieniasz">
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary">💾 Zapisz jako nową wersję</button>
+        <p class="muted small">Poprzednia wersja zostanie zachowana w historii. Nowa wersja staje się aktywną.</p>
+      </div>
+    </form>
+
+    <details class="schema-box">
+      <summary>📋 Validation schema for this prompt (read-only)</summary>
+      <pre class="schema-pre">{{ record.validation_schema | tojson(indent=2) }}</pre>
+    </details>
+  {% else %}
+    <div class="card empty">
+      <p>Brak zdefiniowanych promptów. Dodaj plik JSON w <code>prompts/&lt;project&gt;/&lt;name&gt;.json</code>.</p>
+    </div>
+  {% endif %}
+{% endblock %}

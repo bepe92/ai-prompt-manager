@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+  {% include "_selector.html" %}
+
+  {% if record %}
+    <h1 class="page-title">🕓 Historia wersji — {{ record.name }}</h1>
+    <p class="page-sub">
+      Łącznie wersji: <strong>{{ record.versions|length }}</strong> · Aktywna: <strong>v{{ record.current_version }}</strong>
+    </p>
+
+    <div class="history">
+      {% for v in record.versions | reverse %}
+        <article class="version-card card {% if v.version == record.current_version %}is-active{% endif %}">
+          <header class="version-head">
+            <div>
+              <span class="version-num">v{{ v.version }}</span>
+              {% if v.version == record.current_version %}<span class="pill pill--active">ACTIVE</span>{% endif %}
+              {% if v.test_passed is true %}
+                <span class="pill pill--ok">TEST PASSED</span>
+              {% elif v.test_passed is false %}
+                <span class="pill pill--fail">TEST FAILED</span>
+              {% else %}
+                <span class="pill pill--neutral">NEVER TESTED</span>
+              {% endif %}
+            </div>
+            <div class="version-date">{{ v.saved_at.replace('T', ' ') }}</div>
+          </header>
+
+          {% if v.note %}
+            <p class="version-note">„{{ v.note }}"</p>
+          {% endif %}
+
+          <details class="version-body">
+            <summary>Pokaż treść promptu (długość: {{ v.prompt|length }} znaków)</summary>
+            <pre class="schema-pre small">{{ v.prompt }}</pre>
+
+            {% if v.test_input %}
+              <h4 class="result-section">Ostatni test input</h4>
+              <pre class="schema-pre small">{{ v.test_input }}</pre>
+            {% endif %}
+            {% if v.test_output %}
+              <h4 class="result-section">Ostatni test output</h4>
+              <pre class="schema-pre small">{{ v.test_output | tojson(indent=2) }}</pre>
+            {% endif %}
+          </details>
+
+          {% if v.version != record.current_version %}
+            <form method="post" action="{{ url_for('activate') }}" class="version-actions">
+              <input type="hidden" name="project" value="{{ project }}">
+              <input type="hidden" name="name" value="{{ name }}">
+              <input type="hidden" name="version" value="{{ v.version }}">
+              <button type="submit" class="btn btn--ghost">↩ Przywróć tę wersję jako aktywną</button>
+            </form>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card empty">
+      <p>Brak promptów.</p>
+    </div>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,30 @@
+{# Shared dropdowns for project + prompt selection. Submits as GET on change. #}
+<form method="get" class="selector">
+  <div class="selector-group">
+    <label for="project-pick">Project</label>
+    <select id="project-pick" name="project" onchange="this.form.submit()">
+      {% for proj in projects %}
+        <option value="{{ proj }}" {% if proj == project %}selected{% endif %}>{{ proj }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="selector-group">
+    <label for="name-pick">Prompt</label>
+    <select id="name-pick" name="name" onchange="this.form.submit()">
+      {% for n in prompts_by_project.get(project, []) %}
+        <option value="{{ n }}" {% if n == name %}selected{% endif %}>{{ n }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  {% if record %}
+    <div class="meta">
+      <span class="meta-label">Active version</span>
+      <span class="meta-value">v{{ record.current_version }}</span>
+      <span class="meta-sep">·</span>
+      <span class="meta-label">Versions stored</span>
+      <span class="meta-value">{{ record.versions|length }}</span>
+    </div>
+  {% endif %}
+</form>

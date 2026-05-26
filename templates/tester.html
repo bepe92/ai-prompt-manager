@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+  {% include "_selector.html" %}
+
+  {% if record %}
+    <div class="tester-split">
+      <form method="post" class="tester-input card">
+        <input type="hidden" name="project" value="{{ project }}">
+        <input type="hidden" name="name" value="{{ name }}">
+
+        <h2 class="card-title">⚗️ Test input</h2>
+        <p class="muted small">Wklej przykładowy input — email, fragment tekstu, JSON z danymi — coś co pasuje do tego promptu.</p>
+
+        <textarea name="test_input" class="prompt-area" spellcheck="false" placeholder="wklej tu treść do przetestowania promptu">{{ test_input }}</textarea>
+
+        <details class="schema-box">
+          <summary>🔍 Active prompt being tested (v{{ record.current_version }})</summary>
+          <pre class="schema-pre small">{{ record.active_prompt }}</pre>
+        </details>
+
+        <div class="form-actions">
+          <button type="submit" name="action" value="run" class="btn btn--primary">▶ Uruchom test</button>
+        </div>
+      </form>
+
+      <div class="tester-result card">
+        <h2 class="card-title">📤 Result</h2>
+
+        {% if result %}
+          <div class="result-meta">
+            <span class="pill {% if result.is_valid %}pill--ok{% else %}pill--fail{% endif %}">
+              {% if result.is_valid %}PASSED{% else %}FAILED{% endif %}
+            </span>
+            <span class="meta-label">Latency</span><span class="meta-value">{{ result.latency_ms }} ms</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-label">Model</span><span class="meta-value">{{ result.model }}</span>
+          </div>
+
+          {% if result.errors %}
+            <div class="errors-box">
+              <strong>Walidator zgłosił:</strong>
+              <ul>
+                {% for err in result.errors %}<li>{{ err }}</li>{% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+
+          <h3 class="result-section">Surowa odpowiedź</h3>
+          <pre class="raw-output">{{ result.raw_output }}</pre>
+
+          {% if result.parsed_output %}
+            <h3 class="result-section">Sparsowany JSON</h3>
+            <pre class="raw-output">{{ result.parsed_output | tojson(indent=2) }}</pre>
+          {% endif %}
+
+          {% if result.is_valid %}
+            <p class="muted small">✅ Walidacja przeszła. Wynik testu zapisany na v{{ record.current_version }}. Jeśli rezultat Ci pasuje, zostaw — ta wersja jest już aktywna.</p>
+          {% else %}
+            <p class="muted small">❌ Walidacja nie przeszła. Wróć do <a href="{{ url_for('editor', project=project, name=name) }}">Editora</a>, popraw prompt i zapisz nową wersję.</p>
+          {% endif %}
+        {% else %}
+          <p class="muted small">Wynik pojawi się tutaj po uruchomieniu testu. Po prawej zobaczysz status walidacji Pydantic, surowy output i sparsowany JSON.</p>
+        {% endif %}
+      </div>
+    </div>
+  {% else %}
+    <div class="card empty">
+      <p>Brak promptów do przetestowania.</p>
+    </div>
+  {% endif %}
+{% endblock %}
